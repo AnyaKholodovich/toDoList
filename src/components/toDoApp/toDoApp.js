@@ -4,13 +4,16 @@ import './toDoApp.css'
 
 function TodoApp() {
     const [items, setItems] = useState([]);
-    const [text, seText] = useState("");
+    const [text, setText] = useState("");
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
       fetch('https://jsonplaceholder.typicode.com/todos')
         .then((response) => response.json())
         .then((json) =>  setItems(json.slice(0, 10)))
     }, []);
+  
+
   
 
   const handleСheckbox = (id) => {
@@ -27,10 +30,10 @@ function TodoApp() {
     setItems(newItems);
   }
 
-  const changeTask = (arr) => {
+  const changeTask = (filterList) => {
     return (
       <ul>
-        {arr.map((item) => (
+        {filterList.map((item) => (
           <TodoList
             key={item.id}
             item={item}
@@ -43,28 +46,54 @@ function TodoApp() {
   }
 
  const handleChange = (event) => {
-    setItems(event.target.value);
+    setText(event.target.value);
+  }
+
+  const findDuplicate = () => {
+    let result = false;
+    let copyItems = [...items];
+    let copyText = text.replace(/\s/g, '');
+    copyItems.forEach((item) => {
+      item.title = item.title.replace(/\s/g, '');
+      if (item.title === copyText) {
+        result = true;
+        return false;
+      }
+    });
+    return result;
   }
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (text.length === 0) {
+    if (text.length === 0 || findDuplicate()) {
       return;
     }
     const newItem = {
-      text: text,
+      title: text,
       id: Date.now(),
       cheked: false
     };
     setItems(items.concat(newItem));
-    seText("");
+    setText("");
   }
 
+  const filterList = items.filter(item => {
+    return item.title.toLowerCase().includes(search.toLowerCase());
+  });
 
     return (
       <div className="toDoBlock">
         <h3>Список дел</h3>
-        {changeTask(items)}
+        {changeTask(filterList)}
+        <form className = "search-form">
+          <input
+              type = 'text'
+              placeholder = 'Найти..'
+              className = "search-input"
+              onChange = {(event) => setSearch(event.target.value)}
+          />
+          <button>Искать</button>
+        </form>
         <form onSubmit={handleSubmit}>
           <div className="toDoTxt">
             <label htmlFor="new-todo">Что нужно сделать?</label>
